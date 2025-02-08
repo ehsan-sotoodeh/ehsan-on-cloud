@@ -83,10 +83,6 @@ def root():
 async def get_tasks():
     """Fetch all tasks from MongoDB, ensuring `_id` is converted to string."""
     tasks = await collection.find().to_list(100)
-
-    # Print fetched data to debug
-    print("Fetched tasks from MongoDB:", tasks)
-    # use the task_serializer function to convert ObjectId to string
     return list(map(task_serializer, tasks))
 
 
@@ -100,13 +96,10 @@ async def add_task(task: TaskModel):
 @app.put("/tasks/{task_id}")
 async def update_task(task_id: str, task: TaskModel):
     """Update a task in MongoDB."""
-    print("task >>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    print(task)
     result = await collection.update_one(
         {"_id": ObjectId(task_id)},
         {"$set": {"task": task.task, "completed": task.completed}},
     )
-    print(result)
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task updated successfully"}

@@ -14,18 +14,18 @@ services:
     env_file:
       - ./frontend/.env
     depends_on:
-      - backend
+      - task_service
     command: npm run dev -- --host
-  backend:
-    build: ./backend
+  task_service:
+    build: ./task_service
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app  # Mount backend source code to container
+      - ./task_service:/app  # Mount task_service source code to container
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
-      - ./backend/.env
+      - ./task_service/.env
     depends_on:
       - mongodb
     restart: always
