@@ -6,6 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 interface Task {
   _id: string;
   task: string;
+  completed: boolean;
 }
 
 const TODOList: React.FC = () => {
@@ -24,13 +25,30 @@ const TODOList: React.FC = () => {
       fetch(`${API_URL}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ task }),
+        body: JSON.stringify({ task, completed: false }),
       })
         .then((res) => res.json())
         .then((newTask) => setTasks([...tasks, newTask]));
 
       setTask("");
     }
+  };
+
+  const updateTask = (task: Task, completed: boolean) => {
+    // set the completed status of the task
+    task.completed = completed;
+    console.log(task);
+    fetch(`${API_URL}/tasks/${task._id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        task: task.task,
+        completed: task.completed,
+      }),
+    })
+      .then(() => fetch(`${API_URL}/tasks`))
+      .then((res) => res.json())
+      .then((data) => setTasks(data));
   };
 
   const removeTask = (_id: string) => {
@@ -73,7 +91,18 @@ const TODOList: React.FC = () => {
               key={t._id}
               className="d-flex justify-content-between align-items-center"
             >
-              {t.task}
+              <div className="d-flex w-100">
+                <Form.Check
+                  type="checkbox"
+                  checked={t.completed ?? false}
+                  onChange={(e) => updateTask(t, e.target.checked)}
+                />
+                <div
+                  className={`ms-4 ${t.completed ? "text-decoration-line-through" : ""}`}
+                >
+                  {t.task}
+                </div>
+              </div>
               <Button
                 variant="danger"
                 size="sm"

@@ -35,11 +35,13 @@ collection = db.todos  # Collection name
 
 class TaskModel(BaseModel):
     task: str
+    completed: bool = False
 
 
-class TaskResponseModel(BaseModel):
+class TaskResponseModel(TaskModel):
     id: str = Field(..., alias="_id")  # Ensure _id is included in response
     task: str
+    completed: bool = False
 
     class Config:
         allow_population_by_field_name = True  # Allow aliasing of _id
@@ -49,7 +51,11 @@ class TaskResponseModel(BaseModel):
 
 # Convert MongoDB document to Python dictionary
 def task_serializer(task):
-    return {"_id": str(task["_id"]), "task": task["task"]}  # Convert ObjectId to string
+    return {
+        "_id": str(task["_id"]),
+        "task": task["task"],
+        "completed": task.get("completed", False),  # Default `completed` if missing
+    }  # Convert ObjectId to string
 
 
 @app.on_event("startup")
@@ -80,12 +86,8 @@ async def get_tasks():
 
     # Print fetched data to debug
     print("Fetched tasks from MongoDB:", tasks)
-
-    return [
-        {"_id": str(task["_id"]), "task": task["task"]}
-        for task in tasks
-        if "_id" in task and "task" in task
-    ]
+    # use the task_serializer function to convert ObjectId to string
+    return list(map(task_serializer, tasks))
 
 
 @app.post("/tasks", response_model=TaskResponseModel)
@@ -93,6 +95,21 @@ async def add_task(task: TaskModel):
     new_task = {"task": task.task}
     result = await collection.insert_one(new_task)
     return {"_id": str(result.inserted_id), "task": task.task}
+
+
+@app.put("/tasks/{task_id}")
+async def update_task(task_id: str, task: TaskModel):
+    """Update a task in MongoDB."""
+    print("task >>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print(task)
+    result = await collection.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$set": {"task": task.task, "completed": task.completed}},
+    )
+    print(result)
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task updated successfully"}
 
 
 @app.delete("/tasks/{task_id}")
