@@ -3,7 +3,7 @@ import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
 
 const TODOList: React.FC = () => {
   const [task, setTask] = useState<string>("");
-  const [tasks, setTasks] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<string[]>(["Task 1", "Task 2", "Task 3"]);
 
   const addTask = () => {
     if (task.trim()) {

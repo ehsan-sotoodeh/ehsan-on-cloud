@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  frontend:
+    container_name: react-app
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Avoid overwriting node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev -- --host
