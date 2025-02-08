@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
 
-const API_URL = "http://localhost:8000"; // Backend URL
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const TODOList: React.FC = () => {
   const [task, setTask] = useState<string>("");

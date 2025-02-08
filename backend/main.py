@@ -1,8 +1,14 @@
-from fastapi import FastAPI
+import os
+import asyncio
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import motor.motor_asyncio
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 
 app = FastAPI()
@@ -17,7 +23,7 @@ app.add_middleware(
 )
 
 # MongoDB connection
-MONGO_URI = "mongodb://mongodb:27017"
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
 db = client.todo_db  # Database name
 collection = db.todos  # Collection name
