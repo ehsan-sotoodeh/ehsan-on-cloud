@@ -1,7 +1,8 @@
 import os
 import asyncio
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import motor.motor_asyncio
@@ -36,6 +37,21 @@ class TaskModel(BaseModel):
     task: str
 
 
+class TaskResponseModel(BaseModel):
+    id: str = Field(..., alias="_id")  # Ensure _id is included in response
+    task: str
+
+    class Config:
+        allow_population_by_field_name = True  # Allow aliasing of _id
+        arbitrary_types_allowed = True  # Allow any type (e.g., ObjectId)
+        json_encoders = {ObjectId: str}  # Convert ObjectId to string
+
+
+# Convert MongoDB document to Python dictionary
+def task_serializer(task):
+    return {"_id": str(task["_id"]), "task": task["task"]}  # Convert ObjectId to string
+
+
 @app.on_event("startup")
 async def startup_db_client():
     """Wait for MongoDB to be ready before running FastAPI"""
@@ -57,23 +73,32 @@ def root():
     return {"message": "Hello World"}
 
 
-@app.get("/tasks", response_model=List[str])
+@app.get("/tasks", response_model=List[TaskResponseModel])
 async def get_tasks():
+    """Fetch all tasks from MongoDB, ensuring `_id` is converted to string."""
     tasks = await collection.find().to_list(100)
-    return [task["task"] for task in tasks]
+
+    # Print fetched data to debug
+    print("Fetched tasks from MongoDB:", tasks)
+
+    return [
+        {"_id": str(task["_id"]), "task": task["task"]}
+        for task in tasks
+        if "_id" in task and "task" in task
+    ]
 
 
-@app.post("/tasks")
+@app.post("/tasks", response_model=TaskResponseModel)
 async def add_task(task: TaskModel):
     new_task = {"task": task.task}
-    await collection.insert_one(new_task)
-    return {"message": "Task added successfully"}
+    result = await collection.insert_one(new_task)
+    return {"_id": str(result.inserted_id), "task": task.task}
 
 
 @app.delete("/tasks/{task_id}")
-async def delete_task(task_id: int):
+async def delete_task(task_id: str):
     """Delete a task from MongoDB."""
-    result = await collection.delete_one({"_id": task_id})
+    result = await collection.delete_one({"_id": ObjectId(task_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task removed successfully"}

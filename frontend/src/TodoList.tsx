@@ -3,9 +3,14 @@ import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+interface Task {
+  _id: string;
+  task: string;
+}
+
 const TODOList: React.FC = () => {
   const [task, setTask] = useState<string>("");
-  const [tasks, setTasks] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   // Fetch tasks from FastAPI + MongoDB
   useEffect(() => {
@@ -21,16 +26,15 @@ const TODOList: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task }),
       })
-        .then(() => fetch(`${API_URL}/tasks`))
         .then((res) => res.json())
-        .then((data) => setTasks(data));
+        .then((newTask) => setTasks([...tasks, newTask]));
 
       setTask("");
     }
   };
 
-  const removeTask = (index: number) => {
-    fetch(`${API_URL}/tasks/${index}`, { method: "DELETE" })
+  const removeTask = (_id: string) => {
+    fetch(`${API_URL}/tasks/${_id}`, { method: "DELETE" })
       .then(() => fetch(`${API_URL}/tasks`))
       .then((res) => res.json())
       .then((data) => setTasks(data));
@@ -64,16 +68,16 @@ const TODOList: React.FC = () => {
 
       <ListGroup className="mt-3">
         {tasks.length > 0 ? (
-          tasks.map((t, index) => (
+          tasks.map((t) => (
             <ListGroup.Item
-              key={index}
+              key={t._id}
               className="d-flex justify-content-between align-items-center"
             >
-              {t}
+              {t.task}
               <Button
                 variant="danger"
                 size="sm"
-                onClick={() => removeTask(index)}
+                onClick={() => removeTask(t._id)}
               >
                 Remove
               </Button>
