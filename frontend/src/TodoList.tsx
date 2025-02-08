@@ -1,19 +1,38 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
+
+const ENV_API_URL = "http://localhost:8000";
 
 const TODOList: React.FC = () => {
   const [task, setTask] = useState<string>("");
-  const [tasks, setTasks] = useState<string[]>(["Task 1", "Task 2", "Task 3"]);
+  const [tasks, setTasks] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch(`${ENV_API_URL}/tasks`)
+      .then((res) => res.json())
+      .then((data) => setTasks(data));
+  }, []);
 
   const addTask = () => {
     if (task.trim()) {
-      setTasks([...tasks, task]);
+      fetch(`${ENV_API_URL}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task }),
+      })
+        .then(() => fetch(`${ENV_API_URL}/tasks`))
+        .then((res) => res.json())
+        .then((data) => setTasks(data));
+
       setTask("");
     }
   };
 
   const removeTask = (index: number) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+    fetch(`${ENV_API_URL}/tasks/${index}`, { method: "DELETE" })
+      .then(() => fetch(`${ENV_API_URL}/tasks`))
+      .then((res) => res.json())
+      .then((data) => setTasks(data));
   };
 
   return (

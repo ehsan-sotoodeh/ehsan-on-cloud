@@ -12,3 +12,12 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
     command: npm run dev -- --host
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  # Mount backend source code to container
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
