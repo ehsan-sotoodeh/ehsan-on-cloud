@@ -21,3 +21,14 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: always
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

@@ -1,26 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
 
-const ENV_API_URL = "http://localhost:8000";
+const API_URL = "http://localhost:8000"; // Backend URL
 
 const TODOList: React.FC = () => {
   const [task, setTask] = useState<string>("");
   const [tasks, setTasks] = useState<string[]>([]);
 
+  // Fetch tasks from FastAPI + MongoDB
   useEffect(() => {
-    fetch(`${ENV_API_URL}/tasks`)
+    fetch(`${API_URL}/tasks`)
       .then((res) => res.json())
       .then((data) => setTasks(data));
   }, []);
 
   const addTask = () => {
     if (task.trim()) {
-      fetch(`${ENV_API_URL}/tasks`, {
+      fetch(`${API_URL}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task }),
       })
-        .then(() => fetch(`${ENV_API_URL}/tasks`))
+        .then(() => fetch(`${API_URL}/tasks`))
         .then((res) => res.json())
         .then((data) => setTasks(data));
 
@@ -29,8 +30,8 @@ const TODOList: React.FC = () => {
   };
 
   const removeTask = (index: number) => {
-    fetch(`${ENV_API_URL}/tasks/${index}`, { method: "DELETE" })
-      .then(() => fetch(`${ENV_API_URL}/tasks`))
+    fetch(`${API_URL}/tasks/${index}`, { method: "DELETE" })
+      .then(() => fetch(`${API_URL}/tasks`))
       .then((res) => res.json())
       .then((data) => setTasks(data));
   };

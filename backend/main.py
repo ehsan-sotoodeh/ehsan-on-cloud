@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+import motor.motor_asyncio
+
 
 app = FastAPI()
 
@@ -14,13 +16,34 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
+# MongoDB connection
+MONGO_URI = "mongodb://mongodb:27017"
+client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
+db = client.todo_db  # Database name
+collection = db.todos  # Collection name
+
 
 # Temporary in-memory task list
-tasks = ["Buy Milk", "Do Laundry", "Clean House", "Learn FastAPI"]
 
 
 class TaskModel(BaseModel):
     task: str
+
+
+@app.on_event("startup")
+async def startup_db_client():
+    """Wait for MongoDB to be ready before running FastAPI"""
+    retries = 5
+    while retries:
+        try:
+            # Ping MongoDB
+            await client.admin.command("ping")
+            print("✅ Connected to MongoDB")
+            break
+        except Exception as e:
+            print(f"❌ MongoDB not available yet... Retrying ({retries})")
+            retries -= 1
+            await asyncio.sleep(3)
 
 
 @app.get("/", response_model=List[str])
@@ -29,19 +52,22 @@ def root():
 
 
 @app.get("/tasks", response_model=List[str])
-def get_tasks():
-    return tasks
+async def get_tasks():
+    tasks = await collection.find().to_list(100)
+    return [task["task"] for task in tasks]
 
 
 @app.post("/tasks")
-def add_task(task: TaskModel):
-    tasks.append(task.task)
+async def add_task(task: TaskModel):
+    new_task = {"task": task.task}
+    await collection.insert_one(new_task)
     return {"message": "Task added successfully"}
 
 
 @app.delete("/tasks/{task_id}")
-def delete_task(task_id: int):
-    if 0 <= task_id < len(tasks):
-        tasks.pop(task_id)
-        return {"message": "Task removed successfully"}
-    return {"error": "Invalid task ID"}
+async def delete_task(task_id: int):
+    """Delete a task from MongoDB."""
+    result = await collection.delete_one({"_id": task_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task removed successfully"}
