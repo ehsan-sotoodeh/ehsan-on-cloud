@@ -1,9 +1,11 @@
 import os
 import asyncio
-from fastapi import FastAPI, HTTPException
+import requests
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel, Field
 from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List
 import motor.motor_asyncio
 from dotenv import load_dotenv
@@ -28,6 +30,25 @@ MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
 db = client.todo_db  # Database name
 collection = db.todos  # Collection name
+
+
+# Auth service URL
+AUTH_SERVICE_URL = "http://auth_service:8001/verify-token"
+
+security = HTTPBearer()
+
+
+def verify_token(credentials: HTTPAuthorizationCredentials):
+    """Verify token by calling auth_service"""
+    print("validating token")
+    token = credentials.credentials
+    response = requests.get(
+        AUTH_SERVICE_URL, headers={"Authorization": f"Bearer {token}"}
+    )
+    if response.status_code != 200:
+        print("invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return response.json()
 
 
 # Temporary in-memory task list
@@ -80,8 +101,9 @@ def root():
 
 
 @app.get("/tasks", response_model=List[TaskResponseModel])
-async def get_tasks():
+async def get_tasks(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Fetch all tasks from MongoDB, ensuring `_id` is converted to string."""
+    verify_token(credentials)  # Ensure token is valid
     tasks = await collection.find().to_list(100)
     return list(map(task_serializer, tasks))
 

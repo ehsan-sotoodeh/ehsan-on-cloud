@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
+import { getCurrentUser, fetchAuthSession } from "aws-amplify/auth"; // Correct imports
+import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -12,12 +14,31 @@ interface Task {
 const TODOList: React.FC = () => {
   const [task, setTask] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Fetch tasks from FastAPI + MongoDB
   useEffect(() => {
-    fetch(`${API_URL}/tasks`)
-      .then((res) => res.json())
-      .then((data) => setTasks(data));
+    const fetchTasks = async () => {
+      try {
+        const user = await getCurrentUser(); // Ensure user is authenticated
+        if (!user) throw new Error("User not authenticated");
+
+        const session = await fetchAuthSession(); // Fetch authentication session
+        const token = session.tokens?.idToken ?? ""; // Get ID token
+
+        const response = await axios.get("http://localhost:8000/tasks", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setTasks(response.data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
   }, []);
 
   const addTask = () => {
@@ -57,6 +78,8 @@ const TODOList: React.FC = () => {
       .then((res) => res.json())
       .then((data) => setTasks(data));
   };
+
+  if (loading) return <p>Loading tasks...</p>;
 
   return (
     <Container className="mt-5 container">

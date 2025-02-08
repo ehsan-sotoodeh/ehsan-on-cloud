@@ -28,6 +28,19 @@ services:
       - ./task_service/.env
     depends_on:
       - mongodb
+      - auth_service
+    restart: always
+  auth_service:
+    build: ./auth_service
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./auth_service:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+    depends_on:
+      - mongodb
     restart: always
   mongodb:
     image: mongo:5.0
