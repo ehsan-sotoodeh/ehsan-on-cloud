@@ -8,10 +8,11 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
-      - /app/node_modules  # Avoid overwriting node_modules
+      - /app/node_modules 
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - VITE_API_URL
+      - VITE_TASK_SERVICE_URL
+      - VITE_ASK_AI_SERVICE_URL
       - VITE_COGNITO_REGION
       - VITE_COGNITO_POOL_ID
       - VITE_COGNITO_CLIENT_ID
@@ -23,10 +24,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./task_service:/app  # Mount task_service source code to container
+      - ./task_service:/app  
     environment:
       - PYTHONUNBUFFERED=1
       - MONGO_URI
+      - AUTH_SERVICE_URL
 
     depends_on:
       - mongodb
@@ -45,6 +47,20 @@ services:
       - VITE_COGNITO_CLIENT_ID
     depends_on:
       - mongodb
+    restart: always
+  ask_ai:
+    build: ./ask_ai
+    ports:
+      - "8002:8000"  
+    volumes:
+      - ./ask_ai:/app  
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OPENAI_API_KEY
+      - AUTH_SERVICE_URL
+    depends_on:
+      - auth_service
+      - task_service
     restart: always
   mongodb:
     image: mongo:5.0

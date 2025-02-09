@@ -5,6 +5,7 @@ import "@aws-amplify/ui-react/styles.css";
 import "./App.css";
 
 import TODOList from "./TodoList";
+import AskAI from "./AskAI";
 
 function App() {
   return (
@@ -18,6 +19,13 @@ function App() {
             </button>
           </div>
           <TODOList />
+
+          <hr />
+          <AskAI />
+          <br />
+          <br />
+          <br />
+          <br />
         </>
       )}
     </Authenticator>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
-import { getCurrentUser, fetchAuthSession } from "aws-amplify/auth"; // Correct imports
-import axios from "axios";
+import apiService from "./services/apiService";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const TASK_SERVICE_URL =
+  import.meta.env.VITE_TASK_SERVICE_URL || "http://localhost:8000";
 
 interface Task {
   _id: string;
@@ -16,21 +16,11 @@ const TODOList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch tasks from FastAPI + MongoDB
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const user = await getCurrentUser(); // Ensure user is authenticated
-        if (!user) throw new Error("User not authenticated");
-
-        const session = await fetchAuthSession(); // Fetch authentication session
-        const token = session.tokens?.idToken ?? ""; // Get ID token
-
-        const response = await axios.get(`${API_URL}/tasks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setTasks(response.data);
+        const data = await apiService.get(`${TASK_SERVICE_URL}/tasks`);
+        if (!data.error) setTasks(data);
       } catch (error) {
         console.error("Error fetching tasks:", error);
       } finally {
@@ -41,42 +31,52 @@ const TODOList: React.FC = () => {
     fetchTasks();
   }, []);
 
-  const addTask = () => {
+  // Add a new task
+  const addTask = async () => {
     if (task.trim()) {
-      fetch(`${API_URL}/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ task, completed: false }),
-      })
-        .then((res) => res.json())
-        .then((newTask) => setTasks([...tasks, newTask]));
-
-      setTask("");
+      try {
+        const newTask = await apiService.post(`${TASK_SERVICE_URL}/tasks`, {
+          task,
+          completed: false,
+        });
+        if (!newTask.error) setTasks([...tasks, newTask]);
+        setTask("");
+      } catch (error) {
+        console.error("Error adding task:", error);
+      }
     }
   };
 
-  const updateTask = (task: Task, completed: boolean) => {
-    // set the completed status of the task
-    task.completed = completed;
-    console.log(task);
-    fetch(`${API_URL}/tasks/${task._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        task: task.task,
-        completed: task.completed,
-      }),
-    })
-      .then(() => fetch(`${API_URL}/tasks`))
-      .then((res) => res.json())
-      .then((data) => setTasks(data));
+  // Update task completion status
+  const updateTask = async (task: Task, completed: boolean) => {
+    try {
+      const updatedTask = await apiService.put(
+        `${TASK_SERVICE_URL}/tasks/${task._id}`,
+        {
+          task: task.task,
+          completed,
+        }
+      );
+      if (!updatedTask.error) {
+        setTasks(
+          tasks.map((t) => (t._id === task._id ? { ...t, completed } : t))
+        );
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
   };
 
-  const removeTask = (_id: string) => {
-    fetch(`${API_URL}/tasks/${_id}`, { method: "DELETE" })
-      .then(() => fetch(`${API_URL}/tasks`))
-      .then((res) => res.json())
-      .then((data) => setTasks(data));
+  // Remove a task
+  const removeTask = async (_id: string) => {
+    try {
+      const response = await apiService.delete(
+        `${TASK_SERVICE_URL}/tasks/${_id}`
+      );
+      if (!response.error) setTasks(tasks.filter((t) => t._id !== _id));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   };
 
   if (loading) return <p>Loading tasks...</p>;
