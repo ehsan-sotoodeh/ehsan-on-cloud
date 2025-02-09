@@ -26,7 +26,7 @@ const TODOList: React.FC = () => {
         const session = await fetchAuthSession(); // Fetch authentication session
         const token = session.tokens?.idToken ?? ""; // Get ID token
 
-        const response = await axios.get("http://localhost:8000/tasks", {
+        const response = await axios.get(`${API_URL}/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

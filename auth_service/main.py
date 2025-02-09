@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
-APP_CLIENT_ID = os.getenv("COGNITO_APP_CLIENT_ID")
+AWS_REGION = os.getenv("VITE_COGNITO_REGION", "us-east-1")
+USER_POOL_ID = os.getenv("VITE_COGNITO_POOL_ID")
+APP_CLIENT_ID = os.getenv("VITE_COGNITO_CLIENT_ID")
 COGNITO_ISSUER = f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{USER_POOL_ID}"
 JWKS_URL = f"{COGNITO_ISSUER}/.well-known/jwks.json"
 

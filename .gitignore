@@ -1,0 +1,53 @@
+# Byte-compiled / compiled Python files
+
+**pycache**/
+_.py[cod]
+_$py.class
+
+# Virtual environment
+
+venv/
+.env
+.env.*
+*/.env
+*/.env.*
+**/.env
+**/.env.*
+
+*.pyc
+# Dependencies
+
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Logs and database files
+
+_.log
+_.sqlite3
+
+# Docker
+
+docker-compose.override.yml
+\*.pid
+
+# VSCode
+
+.vscode/
+
+# Pytest
+
+.pytest_cache/
+
+# Jupyter Notebook
+
+.ipynb_checkpoints/
+
+# macOS
+
+.DS_Store
+
+# Ignore editor files
+
+_.swp
+_.swo
+\*.idea/

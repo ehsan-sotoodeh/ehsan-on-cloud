@@ -11,8 +11,10 @@ services:
       - /app/node_modules  # Avoid overwriting node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
-    env_file:
-      - ./frontend/.env
+      - VITE_API_URL
+      - VITE_COGNITO_REGION
+      - VITE_COGNITO_POOL_ID
+      - VITE_COGNITO_CLIENT_ID
     depends_on:
       - task_service
     command: npm run dev -- --host
@@ -24,8 +26,8 @@ services:
       - ./task_service:/app  # Mount task_service source code to container
     environment:
       - PYTHONUNBUFFERED=1
-    env_file:
-      - ./task_service/.env
+      - MONGO_URI
+
     depends_on:
       - mongodb
       - auth_service
@@ -38,7 +40,9 @@ services:
       - ./auth_service:/app
     environment:
       - PYTHONUNBUFFERED=1
-
+      - VITE_COGNITO_REGION
+      - VITE_COGNITO_POOL_ID
+      - VITE_COGNITO_CLIENT_ID
     depends_on:
       - mongodb
     restart: always
@@ -50,6 +54,7 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+      
 
 volumes:
   mongodb_data:
