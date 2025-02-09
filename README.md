@@ -1,6 +1,6 @@
 # To run Frontend
 
-docker-compose up --build
+docker-compose --env-file local.env up --build
 
 # Backend docs
 
