@@ -33,20 +33,19 @@ collection = db.todos  # Collection name
 
 
 # Auth service URL
-AUTH_SERVICE_URL = "http://auth_service:8001/verify-token"
-
+AUTH_SERVICE_URL = (
+    os.getenv("AUTH_SERVICE_URL", "http://auth_service:8001") + "/verify-token"
+)
 security = HTTPBearer()
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials):
     """Verify token by calling auth_service"""
-    print("validating token")
     token = credentials.credentials
     response = requests.get(
         AUTH_SERVICE_URL, headers={"Authorization": f"Bearer {token}"}
     )
     if response.status_code != 200:
-        print("invalid token")
         raise HTTPException(status_code=401, detail="Invalid token")
     return response.json()
 
@@ -87,10 +86,8 @@ async def startup_db_client():
         try:
             # Ping MongoDB
             await client.admin.command("ping")
-            print("✅ Connected to MongoDB")
             break
         except Exception as e:
-            print(f"❌ MongoDB not available yet... Retrying ({retries})")
             retries -= 1
             await asyncio.sleep(3)
 

@@ -55,8 +55,7 @@ def get_cognito_public_keys():
 
 def verify_token(token: str):
     """Verify and decode JWT token using Cognito Public Key"""
-    print("validating token")
-    print(token)
+
     try:
         headers = jwt.get_unverified_header(token)
         kid = headers["kid"]
@@ -73,7 +72,6 @@ def verify_token(token: str):
 
         # Convert JWK to PEM format
         public_key = jwk.construct(key)
-        print(public_key)
         decoded_token = jwt.decode(
             token,
             public_key,
@@ -84,7 +82,6 @@ def verify_token(token: str):
         return decoded_token
 
     except JWTError as e:
-        print(e)
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
 

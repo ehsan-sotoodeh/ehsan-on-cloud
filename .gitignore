@@ -15,7 +15,11 @@ venv/
 **/.env
 **/.env.*
 
+# Blacklist __pycache__ directories
+**/__pycache__/
 *.pyc
+
+
 # Dependencies
 
 pip-log.txt
