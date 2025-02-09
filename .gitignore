@@ -9,6 +9,7 @@ _$py.class
 venv/
 .env
 .env.*
+*.env
 */.env
 */.env.*
 **/.env
