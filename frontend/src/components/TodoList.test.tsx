@@ -14,7 +14,7 @@ vi.mock("../services/apiService", async () => {
   };
 });
 const mockTasks = [
-  { _id: "1", task: "Test Task 10", completed: false },
+  { _id: "1", task: "Test Task 1", completed: false },
   { _id: "2", task: "Test Task 2", completed: true },
 ];
 
