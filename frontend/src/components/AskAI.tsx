@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Container, Form, Row, Col, Card } from "react-bootstrap";
-import apiService from "./services/apiService";
+import { post } from "../services/apiService";
 const ASK_AI_SERVICE_URL =
   import.meta.env.VITE_ASK_AI_SERVICE_URL || "http://localhost:8000";
 
@@ -13,21 +13,26 @@ const AskAI: React.FC = () => {
 
   const askQuestion = async () => {
     setLoading(true);
+    setResponse(""); // Clear the previous response
+
     if (question.trim()) {
       try {
-        const response = await apiService.post(`${ASK_AI_SERVICE_URL}/ask`, {
+        const response = await post(`${ASK_AI_SERVICE_URL}/ask`, {
           prompt: question,
           model: "gpt-4",
         });
+
         if (!response.error) {
           setResponse(response?.response || "Error fetching response");
+        } else {
+          setResponse("Error fetching response"); // Handle API-level errors
         }
-        setQuestion("");
-        setLoading(false);
       } catch (error) {
         console.error("Error adding task:", error);
+        setResponse("Error fetching response"); // Set the error message in state
       }
     }
+    setLoading(false);
   };
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Container, Form, ListGroup, Row, Col } from "react-bootstrap";
-import apiService from "./services/apiService";
+import { get, post, put, deleteRequest } from "../services/apiService";
 
 const TASK_SERVICE_URL =
   import.meta.env.VITE_TASK_SERVICE_URL || "http://localhost:8000";
@@ -19,7 +19,7 @@ const TODOList: React.FC = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const data = await apiService.get(`${TASK_SERVICE_URL}/tasks`);
+        const data = await get(`${TASK_SERVICE_URL}/tasks`);
         if (!data.error) setTasks(data);
       } catch (error) {
         console.error("Error fetching tasks:", error);
@@ -35,7 +35,7 @@ const TODOList: React.FC = () => {
   const addTask = async () => {
     if (task.trim()) {
       try {
-        const newTask = await apiService.post(`${TASK_SERVICE_URL}/tasks`, {
+        const newTask = await post(`${TASK_SERVICE_URL}/tasks`, {
           task,
           completed: false,
         });
@@ -50,13 +50,10 @@ const TODOList: React.FC = () => {
   // Update task completion status
   const updateTask = async (task: Task, completed: boolean) => {
     try {
-      const updatedTask = await apiService.put(
-        `${TASK_SERVICE_URL}/tasks/${task._id}`,
-        {
-          task: task.task,
-          completed,
-        }
-      );
+      const updatedTask = await put(`${TASK_SERVICE_URL}/tasks/${task._id}`, {
+        task: task.task,
+        completed,
+      });
       if (!updatedTask.error) {
         setTasks(
           tasks.map((t) => (t._id === task._id ? { ...t, completed } : t))
@@ -70,9 +67,7 @@ const TODOList: React.FC = () => {
   // Remove a task
   const removeTask = async (_id: string) => {
     try {
-      const response = await apiService.delete(
-        `${TASK_SERVICE_URL}/tasks/${_id}`
-      );
+      const response = await deleteRequest(`${TASK_SERVICE_URL}/tasks/${_id}`);
       if (!response.error) setTasks(tasks.filter((t) => t._id !== _id));
     } catch (error) {
       console.error("Error deleting task:", error);
