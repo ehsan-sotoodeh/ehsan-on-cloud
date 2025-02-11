@@ -4,8 +4,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@aws-amplify/ui-react/styles.css";
 import "./App.css";
 
-import TODOList from "./TodoList";
-import AskAI from "./AskAI";
+import TODOList from "./components/TodoList";
+import AskAI from "./components/AskAI";
 
 function App() {
   return (
